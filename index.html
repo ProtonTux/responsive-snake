@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cobra Responsiva</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    .snake-segment {
+      background-color: #22c55e;
+      border-radius: 9999px;
+      transition: all 0.8s ease-in-out;
+      position: absolute;
+    }
+    .snake-head {
+      background-color: #16a34a;
+      position: absolute;
+      border-radius: 9999px;
+    }
+    .tongue {
+      position: absolute;
+      right: -10px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 10px;
+      height: 2px;
+      background-color: #ef4444;
+    }
+  </style>
+</head>
+<body class="flex flex-col items-center justify-center min-h-screen bg-gray-100 p-6">
+  <div class="flex justify-between w-full max-w-2xl mb-6">
+    <h1 id="title" class="text-2xl font-semibold text-center flex-1">
+      Se uma cobra fosse responsiva, ela seria...
+    </h1>
+    <select id="langSelect" class="border border-gray-400 rounded-lg px-2 py-1 text-sm">
+      <option value="pt">🇧🇷 PT</option>
+      <option value="en">🇬🇧 EN</option>
+    </select>
+  </div>
+
+  <div class="flex gap-4 mb-8">
+    <button id="verticalBtn" class="px-4 py-2 rounded-lg font-medium bg-green-500 text-white"></button>
+    <button id="horizontalBtn" class="px-4 py-2 rounded-lg font-medium bg-gray-300"></button>
+    <button id="curvyBtn" class="px-4 py-2 rounded-lg font-medium bg-gray-300"></button>
+  </div>
+
+  <div class="border border-gray-400 bg-white w-[90%] max-w-2xl h-[48rem] flex items-center justify-center overflow-hidden">
+    <div id="snakeContainer" class="flex flex-col items-center justify-center w-full h-full relative transition-all duration-700 ease-in-out">
+      <!-- Snake built dynamically -->
+    </div>
+  </div>
+
+  <p id="footer" class="mt-6 text-gray-700 text-sm text-center">
+    Feito com Tailwind CSS e Deno 🦕
+  </p>
+
+  <script>
+    const verticalBtn = document.getElementById("verticalBtn");
+    const horizontalBtn = document.getElementById("horizontalBtn");
+    const curvyBtn = document.getElementById("curvyBtn");
+    const snakeContainer = document.getElementById("snakeContainer");
+    const title = document.getElementById("title");
+    const footer = document.getElementById("footer");
+    const langSelect = document.getElementById("langSelect");
+
+    const i18n = {
+      pt: {
+        title: "Se uma cobra fosse responsiva, ela seria...",
+        buttons: ["Vertical 🐍", "Horizontal ➡️", "Curvada 🌀"],
+        footer: "Feito com Tailwind CSS e Deno 🦕"
+      },
+      en: {
+        title: "If a snake were responsive, it would be...",
+        buttons: ["Vertical 🐍", "Horizontal ➡️", "Curvy 🌀"],
+        footer: "Made with Tailwind CSS and Deno 🦕"
+      }
+    };
+
+    let currentLang = "pt";
+    let currentMode = "vertical";
+
+    function setLanguage(lang) {
+      currentLang = lang;
+      const t = i18n[lang];
+      title.textContent = t.title;
+      [verticalBtn, horizontalBtn, curvyBtn].forEach((btn, i) => btn.textContent = t.buttons[i]);
+      footer.textContent = t.footer;
+    }
+
+    function setActive(btn) {
+      [verticalBtn, horizontalBtn, curvyBtn].forEach(b => b.classList.remove("bg-green-500", "text-white"));
+      btn.classList.add("bg-green-500", "text-white");
+    }
+
+    function createSnake(mode) {
+      snakeContainer.innerHTML = "";
+
+      const segments = [];
+      const count = mode === "curvy" ? 15 : mode === "vertical" ? 12 : 12;
+
+      for (let i = 0; i < count; i++) {
+        const segment = document.createElement("div");
+        segment.classList.add("snake-segment");
+        segment.style.width = mode === "horizontal" ? "45px" : "20px";
+        segment.style.height = "20px";
+
+        if (mode === "vertical") {
+          segment.style.top = `${i * 25 + 40}px`;
+          segment.style.left = "50%";
+          segment.style.transform = "translateX(-50%)";
+        } else if (mode === "horizontal") {
+          segment.style.left = `${i * 35 + 40}px`;
+          segment.style.top = "50%";
+          segment.style.transform = "translateY(-50%)";
+        } else if (mode === "curvy") {
+          // make a real S-shaped pattern
+          const curve = Math.sin(i / 1.2) * 80;
+          segment.style.top = `${i * 25 + 40}px`;
+          segment.style.left = `calc(50% + ${curve}px)`;
+          segment.style.transform = "translateX(-50%)";
+        }
+        snakeContainer.appendChild(segment);
+        segments.push(segment);
+      }
+
+      // Head
+      const head = document.createElement("div");
+      head.classList.add("snake-head");
+      head.style.width = "25px";
+      head.style.height = "25px";
+      const last = segments[segments.length - 1];
+      head.style.top = last.style.top;
+      head.style.left = last.style.left;
+      head.innerHTML = '<div class="tongue"></div>';
+      snakeContainer.appendChild(head);
+    }
+
+    // Event handlers
+    verticalBtn.onclick = () => {
+      if (currentMode === "vertical") return;
+      currentMode = "vertical";
+      setActive(verticalBtn);
+      createSnake("vertical");
+    };
+
+    horizontalBtn.onclick = () => {
+      if (currentMode === "horizontal") return;
+      currentMode = "horizontal";
+      setActive(horizontalBtn);
+      createSnake("horizontal");
+    };
+
+    curvyBtn.onclick = () => {
+      if (currentMode === "curvy") return;
+      currentMode = "curvy";
+      setActive(curvyBtn);
+      createSnake("curvy");
+    };
+
+    langSelect.onchange = (e) => {
+      setLanguage(e.target.value);
+    };
+
+    // Initial setup
+    setLanguage("pt");
+    setActive(verticalBtn);
+    createSnake("vertical");
+  </script>
+</body>
+</html>
